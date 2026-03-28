@@ -1,0 +1,13 @@
+{
+	"inputs": [],
+	"servers": {
+		"atlassian": {
+			"transport": "sse",
+			"url": "https://mcp.atlassian.com/v1/sse"
+		},
+		"notion": {
+			"transport": "http",
+			"url": "https://mcp.notion.com/mcp"
+		}
+	}
+}
