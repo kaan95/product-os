@@ -1,0 +1,46 @@
+{
+  "skill_name": "sprint-planner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Let's do sprint planning. The sprint is April 14–25. No special constraints, full team available. We need a plan across all squads.",
+      "expected_output": "A structured sprint plan with a clear Sprint Goal, committed work items per squad anchored to Q1 outcomes, stretch goals, and explicit out-of-scope items. Should read local context files and attempt Notion fetch.",
+      "files": [],
+      "expectations": [
+        "Output includes a Sprint Goal (1-2 sentences, outcome-oriented, not task-oriented)",
+        "Plan references at least one Q1 product outcome by name or metric (e.g. document processing time, AURE auto-invoicing, KPI tracking)",
+        "Committed work is broken down by squad (Lawyer Efficiency, AI Squad, Finance Automation, Customer Trust)",
+        "At least one Jira epic key is mentioned (e.g. OS-2831, OS-2713, OS-2716, OS-2477)",
+        "Plan includes an 'Out of Scope' or 'Not doing this sprint' section",
+        "Plan includes success criteria or how to know the sprint succeeded",
+        "Output is saved as a .md file or clearly structured for use"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Quick sprint planning question: I need to plan the next sprint but I only have partial capacity — two engineers are on holiday and Florian (AI Squad lead) is out the first week. Sprint dates: April 28 – May 9. Help me plan it with realistic scope.",
+      "expected_output": "A sprint plan that explicitly accounts for reduced capacity. Should de-scope or flag at-risk items for Florian's squad (OS-2713), protect P0 work, and be explicit about what's being deferred due to capacity constraints.",
+      "files": [],
+      "expectations": [
+        "Plan acknowledges the capacity constraints explicitly (Florian out, 2 engineers absent)",
+        "AI Squad / OS-2713 scope is reduced or flagged as at-risk for the first week",
+        "P0 outcomes (document processing, AURE auto-invoicing, KPI tracking) are still represented",
+        "Sprint Goal is calibrated to realistic capacity (not overpromising)",
+        "Out-of-scope section explains what was deprioritized and why (capacity)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I've got a bunch of items from the Notion board that people have been requesting. Can you help me figure out which ones should go into the sprint vs. the backlog? We're planning sprint starting April 14.",
+      "expected_output": "The skill should fetch from Notion, evaluate the items against Q1 outcomes and priority framework, produce a triage showing which items belong in the sprint (and why) vs. backlog, and anchor the sprint to the right outcome work.",
+      "files": [],
+      "expectations": [
+        "Skill attempts to fetch from the Notion product issues board",
+        "Items are evaluated against quarterly outcomes alignment (not just priority labels)",
+        "Sprint candidates are distinguished from backlog items with reasoning",
+        "Sprint Goal is still defined even though the request framed it as 'triage'",
+        "P0 and P1 outcome work takes priority over internal feedback requests"
+      ]
+    }
+  ]
+}
