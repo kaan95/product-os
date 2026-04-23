@@ -1,11 +1,11 @@
 ---
 name: user-story
-description: Create a well-structured user story in Jira based on provided input. 
+description: Create a well-structured user story or bug ticket in Jira based on provided input.
 ---
 
-# Create User Story
+# Create User Story or Bug
 
-Generate a well-structured user story based on the following input:
+Generate a well-structured ticket based on the following input:
 
 $ARGUMENTS
 
@@ -13,49 +13,136 @@ $ARGUMENTS
 
 The user may provide the following optional arguments:
 
-- **Sprint**: The sprint to assign the story to (e.g., "Sprint 30")
+- **Sprint**: The sprint to assign the ticket to (e.g., "Sprint 30")
 - **Project**: The Jira project key (e.g., "OS"). Default: OS
 - **Priority**: The priority level. Options: highest, high, medium, low. Default: medium
+- **Type**: `feature` (default) or `bug`. Infer from the input if not specified (e.g. "fix", "broken", "error" → bug).
 
-## Instructions
+## Step 1 — Classify and gather context
 
-1. Always write the user story in English.
-2. Always create or update the user story directly in Jira.
-3. Only add the following 3 sections: Problem, User Story, Acceptance Criteria. Do not add anything else.
-4. If a sprint is specified, assign the story to that sprint. To assign a sprint, look up the sprint ID first by querying an existing issue in that sprint (JQL: `project = OS AND sprint = "Sprint X"`), then use the numeric sprint ID in `customfield_10020`.
-5. If a priority is specified, set the priority accordingly.
-6. Use the specified project key, or default to "OS" if not provided.
-7. Return the URL link to the ticket to me when you are done.
-8. Keep Acceptance Criteria concise: **2–5 ACs maximum**.
-9. **BE vs FE split:** Always divide work into separate backend and frontend tickets.
-   - Backend tickets must have the prefix: `BE - `
-   - Frontend tickets must have the prefix: `FE - `
-   - If it is unclear whether the ticket is BE or FE, ask the user before creating it.
-10. After creating the ticket, **transition it to "Open"** status using `getTransitionsForJiraIssue` and `transitionJiraIssue`.
-11. **Dependencies:** If tickets have dependencies (e.g. a BE ticket must be done before a FE ticket), link them in Jira using `createIssueLink`:
-    - The FE ticket is "blocked by" the BE ticket.
-    - Use link type "Blocks": inwardIssue = BE ticket (blocker), outwardIssue = FE ticket (blocked).
-12. **Design tickets:** When creating a FE ticket, judge whether a Design ticket is also needed (e.g. new UI components, new flows, significant visual changes).
-    - If yes, create the Design ticket in the **same project** as the FE ticket (OS, CF, or CX — never in the UX project).
-    - Always use issue type **"Design"** for these tickets.
-    - Always assign the Design ticket to **Katharina Treptow** (accountId: `712020:2c26d4fe-2a9e-4876-9e74-7e7311a8112d`).
-    - Link the Design ticket as a dependency of the FE ticket ("blocked by" Design).
-    - Inform the user that a Design ticket was created.
-    - If the change is minor (e.g. disabling a button, showing a toast), skip the Design ticket.
+Before writing anything, classify the ticket as **feature** or **bug** and check whether you have enough information to make it executable for a developer.
 
-## Output
+### For a bug, you must have:
+- A reproducible trigger (endpoint, UI action, or event)
+- At least one concrete example input (anonymized if sensitive)
+- The observed error (status code, error message, Sentry/log link, or screenshot)
+- Environment (prod / staging / local)
+- Impact (who is affected, is there a workaround, is the flow fully blocked)
 
-Create a user story with:
+### For a feature, you must have:
+- The user/persona (a human role — never "the backend", "the system")
+- The concrete goal they're trying to achieve
+- The benefit / outcome
+- Enough scope clarity to write testable ACs
 
-1. **Title**: Clear, concise summary (with BE/FE prefix)
-2. **Problem Definition**: A clear problem definition that helps anyone reading the ticket understand what the problem actually is about.
-3. **User Story Statement**: 
-"As a [persona], 
-I want [goal], 
-So that [benefit]"
-4. **Acceptance Criteria**: 2–5 specific, testable criteria using a title + Given/When/Then format:
+**If required information is missing, ASK the user for it. Do not speculate, and do not invent plausible-sounding root causes, behaviors, or payloads.** Phrases like "appears to be", "may be caused by", "likely" are a signal you are guessing — stop and ask instead.
 
-Title for Acceptance Criteria
-- Given: ...
-- When: ...
-- Then: ...
+## Step 2 — Structure the ticket
+
+### Bug template
+
+```
+## Problem
+[1–3 sentences: what is broken, who is affected, what is the business impact. State facts only.]
+
+## Steps to Reproduce
+1. [concrete step]
+2. [concrete step]
+3. ...
+
+## Expected Behavior
+[what should happen]
+
+## Actual Behavior
+[what happens instead, including error message / status code / stack trace excerpt]
+
+## Evidence
+- Sentry: [link]
+- Logs / screenshots / example payload: [link or snippet]
+- Environment: [prod / staging / local]
+
+## Scope
+- In scope: [what this ticket covers]
+- Out of scope: [what this ticket does NOT cover, to prevent drift]
+
+## Acceptance Criteria
+[2–5 testable ACs — see rules below]
+```
+
+### Feature template
+
+```
+## Problem
+[Why this matters — the user pain or business need. Not a solution description.]
+
+## User Story
+As a [human persona],
+I want [goal],
+So that [benefit].
+
+## Scope
+- In scope: [what this ticket covers]
+- Out of scope: [what this ticket does NOT cover]
+
+## Acceptance Criteria
+[2–5 testable ACs — see rules below]
+```
+
+## Step 3 — Acceptance Criteria rules
+
+Use the Given/When/Then format with a short title per AC:
+
+```
+**AC1: [Title]**
+- Given: [precondition]
+- When: [action]
+- Then: [observable, verifiable outcome]
+```
+
+**Each AC must:**
+- Be verifiable by a single action a QA or automated test can perform.
+- Describe an observable outcome (response, UI state, side effect), not an internal process.
+
+**Do NOT write ACs like:**
+- "Root cause identified and fixed" — not testable, just restates the task.
+- "No regression in existing flows" — belongs in the team's Definition of Done, not per-ticket ACs.
+- "Code is reviewed / documented / deployed" — process, not outcome.
+
+Keep it to **2–5 ACs maximum**. If you find yourself writing more, the ticket is too big — split it.
+
+## Step 4 — Create the ticket in Jira
+
+1. Always write in English.
+2. Always create the ticket directly in Jira (don't draft to the user for approval unless something is ambiguous).
+3. Use the specified project key, or default to **OS**.
+4. If a sprint is specified: look up the sprint ID first via JQL `project = OS AND sprint = "Sprint X"`, then set the numeric sprint ID in `customfield_10020`.
+5. If a priority is specified, set it via `additional_fields`.
+6. For bugs, use issue type **Bug**. For features, use **Story**.
+7. After creating, transition to **Open** using `getTransitionsForJiraIssue` and `transitionJiraIssue`.
+8. Return the URL to the user.
+
+## Step 5 — BE / FE / Design splitting
+
+**Split only when both layers genuinely need work.** A pure API bug, a pure UI copy change, or a backend-only refactor should be **one ticket**, not two.
+
+- Backend-only ticket: prefix `BE - `
+- Frontend-only ticket: prefix `FE - `
+- Both layers needed: create one `BE - ` and one `FE - ` ticket, link them with a "Blocks" issue link (BE blocks FE).
+- If ambiguous, ask the user before splitting.
+
+### Design tickets
+
+When creating a FE ticket, judge whether a Design ticket is also needed:
+- **Yes** for: new UI components, new flows, significant visual changes.
+- **No** for: minor changes like disabling a button, showing an existing toast, copy tweaks.
+
+If yes:
+- Create the Design ticket in the **same project** as the FE ticket (OS, CF, or CX — never UX).
+- Issue type: **Design**.
+- Assignee: **Katharina Treptow** (`712020:2c26d4fe-2a9e-4876-9e74-7e7311a8112d`).
+- Link as a blocker of the FE ticket ("FE ticket blocked by Design").
+- Inform the user that a Design ticket was created.
+
+## Step 6 — Link related context
+
+If the user references a parent initiative, the original feature ticket that introduced the bug, or a related ticket, link it with `createIssueLink` using an appropriate link type ("Relates to" for context, "Blocks" for hard dependencies).
