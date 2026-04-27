@@ -17,8 +17,25 @@ The user may provide the following optional arguments:
 - **Project**: The Jira project key (e.g., "OS"). Default: OS
 - **Priority**: The priority level. Options: highest, high, medium, low. Default: medium
 - **Type**: `feature` (default) or `bug`. Infer from the input if not specified (e.g. "fix", "broken", "error" → bug).
+- **URL** (`--url <url>`): A URL to screenshot for use as evidence (bug tickets only). If provided, a screenshot is captured before the ticket is written.
 
-## Step 1 — Classify and gather context
+## Step 1 — Playwright evidence capture (if --url provided)
+
+If the user passes `--url <url>`, capture a screenshot **before** writing the ticket:
+
+1. Run via Bash:
+   ```
+   npx playwright screenshot --full-page "<url>" /tmp/evidence-$(date +%s).png 2>&1
+   ```
+2. **If Playwright is not installed** (`npx playwright` errors or is not found):
+   - Run `npm install -g playwright` and retry once.
+   - If it still fails, skip silently and note in the Evidence section: `Screenshot: could not be captured — Playwright not available.`
+3. **If the screenshot succeeds**, display the image to the user using the Read tool so they can confirm it captured the right state.
+4. Save the full path of the screenshot file — you will reference it in the `## Evidence` section of the ticket body as:
+   `Screenshot: <path> — attach to this ticket manually.`
+5. Do **not** block ticket creation on screenshot success or failure. Evidence capture is best-effort.
+
+## Step 2 — Classify and gather context
 
 Before writing anything, classify the ticket as **feature** or **bug** and check whether you have enough information to make it executable for a developer.
 
@@ -37,7 +54,7 @@ Before writing anything, classify the ticket as **feature** or **bug** and check
 
 **If required information is missing, ASK the user for it. Do not speculate, and do not invent plausible-sounding root causes, behaviors, or payloads.** Phrases like "appears to be", "may be caused by", "likely" are a signal you are guessing — stop and ask instead.
 
-## Step 2 — Structure the ticket
+## Step 3 — Structure the ticket
 
 ### Bug template
 
@@ -88,7 +105,7 @@ So that [benefit].
 [2–5 testable ACs — see rules below]
 ```
 
-## Step 3 — Acceptance Criteria rules
+## Step 4 — Acceptance Criteria rules
 
 Use the Given/When/Then format with a short title per AC:
 
@@ -110,7 +127,7 @@ Use the Given/When/Then format with a short title per AC:
 
 Keep it to **2–5 ACs maximum**. If you find yourself writing more, the ticket is too big — split it.
 
-## Step 4 — Create the ticket in Jira
+## Step 5 — Create the ticket in Jira
 
 1. Always write in English.
 2. Always create the ticket directly in Jira (don't draft to the user for approval unless something is ambiguous).
@@ -121,7 +138,7 @@ Keep it to **2–5 ACs maximum**. If you find yourself writing more, the ticket 
 7. After creating, transition to **Open** using `getTransitionsForJiraIssue` and `transitionJiraIssue`.
 8. Return the URL to the user.
 
-## Step 5 — BE / FE / Design splitting
+## Step 6 — BE / FE / Design splitting
 
 **Split only when both layers genuinely need work.** A pure API bug, a pure UI copy change, or a backend-only refactor should be **one ticket**, not two.
 
@@ -143,6 +160,6 @@ If yes:
 - Link as a blocker of the FE ticket ("FE ticket blocked by Design").
 - Inform the user that a Design ticket was created.
 
-## Step 6 — Link related context
+## Step 7 — Link related context
 
 If the user references a parent initiative, the original feature ticket that introduced the bug, or a related ticket, link it with `createIssueLink` using an appropriate link type ("Relates to" for context, "Blocks" for hard dependencies).

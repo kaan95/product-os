@@ -1,198 +1,48 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working in this repository.
 
-## **Legalhero – Company Context**
+## Purpose of this repo
 
-## **Who We Are**
+This is a **Product Management Operating System** — a portable collection of skills, prompts, and harness configuration that supports a PM's day-to-day work (discovery, prioritization, sprint planning, PRDs, roadmapping, stakeholder updates, etc.).
 
-Legalhero is a legal tech platform that works together with RSV (Rechtsschutzversicherungen) and its own fleet of vetted partner lawyers, in order to solve damage claims fast and reliably by connecting clients with excellent lawyers.
+The repo is designed to be **plug-and-play across companies**. Skills and configuration here must remain free of any specific company, customer, product, or stakeholder content so this OS travels with the user.
 
-We operate at the intersection of technology, insurance, and legal services. Our platform orchestrates the entire journey of a legal case — from intake and coverage clarification to intelligent lawyer matching, mandate distribution, case handling, and structured communication between all stakeholders.
+## Where business context lives
 
-Legalhero is not just a referral platform. We are an operating system for legal case management.
+**Not here.** All business, project, customer, and stakeholder content lives in external tools (Notion, Slack, Jira, Gmail, Google Calendar, etc.). The repo holds only the *machinery* that operates on that external content.
 
-## **Our Mission**
+Concretely, do not write the following into local files in this repo:
+- Company, customer, lawyer, insurer, partner, or stakeholder names
+- Initiative names, PRDs, roadmaps, sprint plans, OKRs, or strategy docs
+- Meeting notes, interview transcripts, or research findings
+- Internal decisions, blockers, or action items
 
-**Strukturen im Rechtsmarkt aufbrechen und Zugang zum Recht vereinfachen.**
+When a skill needs to capture or read business content, it must do so via the appropriate external tool. If a skill is about to write business content into the working directory, that's a bug — fix the skill.
 
-We exist to challenge the status quo of the legal market and make justice radically more accessible.
+## Tool preference: CLI over MCP
 
-**Recht: Neu gedacht.**
+**Always prefer a command-line tool over an MCP server when both can do the job.** CLIs are faster, cheaper on context, scriptable, easier to chain with `grep`/`jq`/pipes, and produce outputs that are stable and easy to inspect.
 
-## **Why Legalhero Exists**
+Order of preference:
+1. **Native CLI** for the service (e.g., `gh` for GitHub, `gcalcli` for Google Calendar, `jira` for Jira, `gcloud` / `aws` / etc.)
+2. **Authenticated HTTP via `curl`** when no CLI exists but a REST API does, and credentials are available locally
+3. **MCP tools** only when no CLI or HTTP path is practical, or when the MCP genuinely offers something the CLI cannot (e.g., rich block-level Notion editing)
 
-The legal market today is:
+Skills should be written with this preference in mind. If a skill currently uses MCP for something a CLI can do, that's worth refactoring.
 
-* Expensive
+If a needed CLI isn't installed, suggest the install command and ask the user before installing.
 
-* Inefficient
+## Skills
 
-* Inaccessible
+Skills live under `.claude/skills/<skill-name>/SKILL.md`. Each skill is a self-contained, portable workflow. When editing a skill:
 
-* Intransparent
+- Keep it free of company/product/customer specifics — use placeholders (`<initiative>`, `<channel>`, `<team>`) instead of real names
+- State the trigger phrases explicitly in the frontmatter `description`
+- Prefer CLI invocations in the skill body over MCP calls
 
-* Analog
+## Conventions
 
-* Elitist
-
-* Poorly standardized
-
-* Lacking customer centricity
-
-Processes are fragmented, communication is slow, and quality varies significantly. Clients struggle to understand their rights. Lawyers are overloaded with administrative tasks. Insurers deal with opacity and inefficiencies. The system as a whole lacks transparency, scalability, and measurable quality standards.
-
-Legalhero exists to disrupt this market — to break old structures, challenge outdated workflows, and build a modern, scalable legal infrastructure.
-
-## **What We Do**
-
-Legalhero builds the digital infrastructure that connects:
-
-* Clients
-
-* Rechtsschutzversicherungen (RSV)
-
-* Vetted partner lawyers
-
-* Internal operational teams
-
-We focus on:
-
-### **1\. Intelligent Matching**
-
-We use structured case data and technology-driven matching to connect clients with the right lawyer based on expertise, availability, performance, and case characteristics.
-
-### **2\. Fallverteilung / Mandatsdistribution**
-
-We manage mandate distribution in a controlled, optimized way to ensure:
-
-* Balanced lawyer workload
-
-* Predictable case flow
-
-* Optimized margins
-
-* High service quality
-
-### **3\. Digital Case Orchestration**
-
-We standardize and digitize workflows across the case lifecycle:
-
-* Structured intake
-
-* Automated coverage checks
-
-* Transparent communication
-
-* Status tracking
-
-* Quality assurance
-
-### **4\. Process Standardization & Prozessdenken**
-
-We design legal service delivery as a system — not as isolated individual mandates.
-
-Our approach:
-
-* Process quality over ad-hoc execution
-
-* Measurable performance
-
-* Defined SLAs
-
-* Continuous optimization
-
-### **5\. Data-Driven Legal Infrastructure**
-
-We build a strong data foundation that enables:
-
-* Transparency
-
-* Performance measurement
-
-* Cost optimization
-
-* Margin optimization
-
-* Resource allocation
-
-* Quality control
-
-* Scalability
-
-Legal services become measurable, comparable, and optimizable.
-
-## **How We Create Value**
-
-### **For Clients**
-
-* Fast access to qualified lawyers
-
-* Transparent processes
-
-* Reduced friction
-
-* Higher satisfaction
-
-* Real access to justice
-
-### **For Lawyers**
-
-* Structured case intake
-
-* Optimized workflows
-
-* Reduced administrative burden
-
-* Predictable case inflow
-
-* Focus on juristische Wertschöpfung instead of operational overhead
-
-### **For Insurers (RSV)**
-
-* Cost optimization
-
-* Process transparency
-
-* Scalable case handling
-
-* Reliable quality standards
-
-* Data-based steering and reporting
-
-## **Our Strategic Vision**
-
-We are building the infrastructure layer for a modern legal ecosystem.
-
-A system where:
-
-* Legal access is simple.
-
-* Processes are standardized.
-
-* Quality is measurable.
-
-* Technology augments lawyers.
-
-* Insurers gain transparency.
-
-* Clients experience clarity instead of friction.
-
-We aim to fundamentally reshape how legal services are accessed, delivered, and scaled.
-
-
-## Product Context
-
-For product context, domain knowledge, and background information, refer to the files in the `/context` folder. This folder contains documentation about:
-- Product specifications and requirements
-- Domain terminology and concepts
-- System architecture and design decisions
-- User personas and workflows
-
-## Build/Test/Lint Commands
-
-*To be added once the project structure is established.*
-
-## Architecture
-
-*To be added once the codebase is developed.*
+- This repo is not a software project — there are no build, test, or lint commands. It's configuration and prompts.
+- Keep markdown clean and skimmable. Avoid emojis unless the user asks.
+- Today's date and the user's email are injected at session start; rely on those rather than hardcoding.

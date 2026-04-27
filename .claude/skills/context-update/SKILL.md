@@ -1,17 +1,19 @@
 ---
 name: context-update
 description: >
-  Harvest context from Notion and/or Slack and write it into a structured context file for a product initiative.
-  Use this skill whenever the user wants to update initiative context, capture meeting notes from Notion, pull decisions or learnings from a Slack channel or thread, or keep the /context folder in sync with what's happening in conversations and meetings.
+  Harvest context from Notion and/or Slack and write it back to the initiative's page in the Notion "Product Initiatives" database.
+  Use this skill whenever the user wants to update initiative context, capture meeting notes, pull decisions or learnings from Slack, or keep an initiative's Notion page in sync with what's happening in conversations and meetings.
   Trigger phrases: "update context", "sync context", "add this meeting to context", "pull context from Notion", "update initiative docs", "capture what we discussed", "add the Slack thread to context", "context update for [initiative]".
   Always use this skill when the user references an initiative AND a Notion link, Slack channel, or thread they want to incorporate.
 ---
 
 # Context Update Skill
 
-You are a context harvester for Legalhero's product initiatives. Your job is to read information from live sources — Notion meeting notes and Slack channels/threads — and distill it into a structured, evergreen context file that lives alongside the initiative's PRD.
+You are a context harvester for product initiatives. Your job is to read information from live sources — Notion meeting notes and Slack channels/threads — and distill it into the initiative's page in the Notion **Product Initiatives** database.
 
-The context file is the single source of truth for "what's happening now" with an initiative. Other skills (like sprint planning, stakeholder updates, and PRD writing) rely on it. Keep it dense with signal, free of noise.
+The initiative's Notion page is the single source of truth for "what's happening now". Other skills (sprint planning, stakeholder updates, PRD writing) should read it from there. Keep it dense with signal, free of noise.
+
+**Important: this skill must never write business, customer, stakeholder, or initiative content into local files.** All such content lives in Notion. The skill itself stays free of company-specific identifiers so it ports cleanly to other contexts.
 
 ---
 
@@ -19,156 +21,131 @@ The context file is the single source of truth for "what's happening now" with a
 
 Determine from the user's message:
 
-- **Initiative name** — which initiative this context belongs to (e.g., "Premium Package Lawyers", "Case Intelligence System")
+- **Initiative name** — which initiative this context belongs to
 - **Sources** — what to pull from:
   - A Notion page URL or page title (meeting notes, decision log, research doc)
-  - A Slack channel name (e.g., `#premium-package`) for recent messages
+  - A Slack channel name for recent messages
   - A Slack thread URL or description
 
-If any of these are missing and the user's intent isn't clear, ask. Keep it to one question at a time.
+If any of these are missing and the user's intent isn't clear, ask. One question at a time.
 
 ---
 
-## Step 2: Locate or create the context file
+## Step 2: Locate the initiative page in Notion
 
-Initiative context files live at:
-```
-.claude/product/initiatives/<year>/<quarter>/<initiative-slug>/context.md
-```
+The destination is the **Product Initiatives** database:
+`collection://32f5e8ca-ce39-80d7-ad58-000b9fa65b14`
 
-For example:
-- `.claude/product/initiatives/2026/Q1/premium-package-lawyers/context.md`
-- `.claude/product/initiatives/2026/Q1/case-intelligence-system/context.md`
+1. Query the database by `Name` (case-insensitive substring match) to find the initiative's page.
+2. If exactly one match is found, use that page.
+3. If multiple match, list them and ask the user to pick.
+4. If no match is found, ask the user to confirm before creating a new page in the database. When creating, populate at minimum: `Name`, `Quarter`, `Assigned Team`, `Status` (default `Not started`).
 
-To find the right path:
-1. Look at existing PRD files in `.claude/product/initiatives/` to identify the initiative's quarter and slug. PRD filenames follow the pattern `prd-<slug>-<date>.md` — use the slug from there.
-2. If the initiative doesn't have a quarter folder yet, use the current quarter.
-
-If the context file doesn't exist yet, create it with the full template (see Step 4). If it already exists, read it first so you understand what's already captured before adding new content.
+Always fetch the existing page body before writing, so you understand what's already captured.
 
 ---
 
 ## Step 3: Fetch from sources
 
-### Fetching from Notion
+### From Notion
 
-Use the Notion MCP to fetch the provided page. Read the full content of the page — meeting notes typically contain: date, attendees, discussion points, decisions, open questions, and next steps.
-
-Focus on extracting:
+Use the Notion MCP to fetch the provided page. Extract:
 - Concrete decisions that affect the initiative
 - Open questions or unresolved issues
-- New learnings or validated/invalidated assumptions
+- New learnings, validated/invalidated assumptions
 - Action items with owners
 
-### Fetching from Slack
+Capture the **block-level link** to each item (Notion supports per-block URLs) so each entry can be traced back to its origin.
 
-**If the user provides a channel name** (e.g., `#premium-package`):
-- Search for the channel using the Slack MCP
-- Read the most recent messages (aim for last 7–14 days unless the user specifies a different window)
-- Focus on threads with meaningful discussion, not one-liners or reactions
+### From Slack
 
-**If the user provides a thread URL or description**:
-- Use the Slack MCP to read that specific thread
-- Extract the full discussion
+**If the user provides a channel name**: search and read recent messages (last 7–14 days unless specified). To suppress noise, only ingest threads that meet at least one of:
+- ≥3 replies, OR
+- contains a decision/blocker keyword (e.g., "decided", "agreed", "blocked", "next step", "action", "owner")
 
-From Slack, focus on:
-- Decisions made in conversation (often informal but important)
-- Blockers or problems raised
-- Alignment or disagreement between stakeholders
-- Things people said they'd do
+**If the user provides a thread URL or description**: read that thread end-to-end.
+
+For each item kept, capture the **Slack message permalink** as the source.
 
 ---
 
-## Step 4: Synthesize and write
+## Step 4: Synthesize and write to the Notion page
 
-Don't just paste raw notes. Distill — extract the signal, drop the noise.
+Don't paste raw notes. Distill — extract signal, drop noise. For each item, ask: *Does this change what someone needs to know about this initiative to make good decisions?* If yes, include it; if it's logistics or tangent, skip it.
 
-Ask yourself for each piece of information: *Does this change what someone needs to know about this initiative to make good decisions?* If yes, include it. If it's a logistics detail or tangential discussion, skip it.
+### Page body structure
 
-**Context file format:**
+The initiative page should follow this section structure (use native Notion blocks where possible: callouts, to-dos, toggles).
 
-```markdown
-# Context: [Initiative Name]
-
-**Last Updated**: YYYY-MM-DD
-**Initiative Path**: .claude/product/initiatives/<year>/<quarter>/<slug>/
-
----
-
-## Overview
-
-[2–4 sentence description of the initiative: what it is, why it exists, current status. Update this as the initiative evolves.]
-
----
-
-## Key Decisions
-
-| Date | Decision | Rationale | Source |
-|------|----------|-----------|--------|
-| YYYY-MM-DD | [What was decided] | [Why, if known] | [Notion/Slack/Meeting] |
-
----
-
-## Open Questions & Blockers
-
-- **[Question or blocker]** — raised [date], source: [where]
-- ...
-
-Remove items from this section when they're resolved. Add a one-line note about the resolution to Key Decisions if it was a real decision.
-
----
-
-## Insights & Learnings
-
-- [YYYY-MM-DD] [What was learned, validated, or invalidated] — [source]
-- ...
-
----
-
-## Action Items
-
-- [ ] [Task description] — [Owner if known] [Due date if known]
-- [ ] ...
-
-Mark items `[x]` when done. Remove completed items after 2 weeks.
-
----
-
-## Update Log
-
-| Date | Source | Summary |
-|------|--------|---------|
-| YYYY-MM-DD | [Notion page / Slack #channel / Slack thread] | [1-line summary of what was added] |
 ```
+[Callout] Overview
+  2–4 sentences: what the initiative is, why it exists, current status.
+  Update this when direction or status meaningfully shifts.
+
+[Heading 2] Key Decisions
+  Bulleted list. Each entry:
+  • YYYY-MM-DD — <decision> — <one-line rationale> — [source link]
+
+[Heading 2] Open Questions & Blockers
+  To-do blocks (so they're checkable in Notion). Each entry:
+  ☐ <question or blocker> — raised YYYY-MM-DD — [source link]
+
+  When resolved: check the box AND move the resolution to Key Decisions
+  if it represents a real decision. Archive checked items into the
+  "Resolved" toggle after 2 weeks.
+
+[Heading 2] Insights & Learnings
+  Bulleted list. Each entry:
+  • YYYY-MM-DD — <what was learned/validated/invalidated> — [source link]
+
+[Heading 2] Action Items
+  To-do blocks. Each entry:
+  ☐ <task> — owner: <name> — due: <date if known> — [source link]
+
+  Mark done in Notion as items complete. Archive done items into the
+  "Completed" toggle after 2 weeks.
+
+[Toggle, collapsed] Update Log
+  • YYYY-MM-DD — <source> — <one-line summary of what was added>
+```
+
+### Section size budgets (not file size)
+
+- Open Questions: max ~10 active. If more, the initiative is too broad — flag to the user.
+- Action Items: max ~15 active. Older items get archived into the toggle.
+- Update Log: keep all entries; the toggle keeps it out of sight.
 
 ---
 
 ## Step 5: Update, don't overwrite
 
-When updating an existing context file:
-- **Do not replace** existing content unless it's been superseded by new information
-- **Append** new decisions, insights, questions, and action items
-- **Update** the Overview section if the initiative status or direction has changed meaningfully
-- **Add a row** to the Update Log for every run of this skill
-- **Deduplicate** — if a question or action item already exists, don't add it again; update it in place if the status changed
+When updating an existing page:
 
-The goal is an accumulating, self-maintaining document. Every time the skill runs, the file gets more useful — not longer and noisier.
+- **Append** new decisions, insights, questions, action items.
+- **Update** the Overview if direction or status has meaningfully changed.
+- **Add a row** to the Update Log for every run of this skill.
+- **Deduplicate**: match new items against existing ones by normalized text (lowercase, first 60 chars). If matched, update in place (e.g., add a newer source link, mark resolved); else append.
+- **Never delete** a user's hand-written content. Only modify content this skill previously added.
+
+The page is an accumulating, self-maintaining document. Every run should make it more useful — not longer and noisier.
 
 ---
 
 ## Step 6: Confirm and report
 
 After writing, tell the user:
-- What file was created or updated (path)
-- What was added (brief: "Added 2 decisions from the Notion meeting, 3 open questions from Slack #premium-package, and 4 action items")
-- Any information you couldn't extract clearly or had to skip
-- Any existing action items that look stale and might need review
+- Which Notion page was updated (with link) — or created
+- What was added (e.g., "2 decisions from the Notion meeting, 3 open questions from Slack, 4 action items")
+- What was **intentionally dropped as noise** (1-line examples — sanity check on the distillation)
+- Anything you couldn't extract clearly or had to skip
+- Any stale-looking action items or open questions that might need user review
 
 ---
 
 ## Guardrails
 
-- If you can't find the initiative's folder, ask the user to confirm the path rather than guessing.
-- If a Notion page or Slack channel returns an error or empty results, tell the user and continue with whatever sources are available.
-- Keep the context file under ~200 lines. If it's getting long, suggest archiving resolved items.
-- Don't add speculation or interpretations — only things that were actually said or decided.
+- **No local writes of business content.** This skill must not create or modify any file under the working directory that contains initiative, customer, stakeholder, or decision content. All such content goes to Notion. If you find yourself about to write a `.md` file with business specifics, stop — that violates the portability principle.
+- If the Notion DB query or Slack fetch errors or returns empty, tell the user and continue with whatever sources are available.
+- Don't add speculation or interpretation — only things actually said or decided. If a decision is implied but not stated, list it under Open Questions, not Key Decisions.
+- For ambiguous initiative matches, always confirm with the user before writing.
+- Source links are required for every entry. If you can't get a link, note `<source: Notion meeting>` or `<source: Slack #channel>` as a fallback, but flag it in the report.
