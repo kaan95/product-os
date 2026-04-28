@@ -75,45 +75,62 @@ Don't paste raw notes. Distill — extract signal, drop noise. For each item, as
 
 ### Page body structure
 
-The initiative page should follow this section structure (use native Notion blocks where possible: callouts, to-dos, toggles).
+Order matters: readers scan top-to-bottom. Front-load context, then what's actively in flight, then memory. Every section header gets an emoji. Use native Notion blocks where possible (callouts, toggle headings, inline databases).
 
 ```
-[Callout] Overview
-  2–4 sentences: what the initiative is, why it exists, current status.
-  Update this when direction or status meaningfully shifts.
+[Callout, no heading] 📌 Important Pages
+  Compact link callout: PRD, Jira/roadmap, Key Meetings page.
+  Hand-maintained — preserve, don't rewrite.
 
-[Heading 2] Key Decisions
-  Bulleted list. Each entry:
-  • YYYY-MM-DD — <decision> — <one-line rationale> — [source link]
+[Heading 2] 📋 Overview
+  Single callout. 2–4 sentences: what the initiative is, why it exists,
+  current status. Update this when direction or status meaningfully shifts.
 
-[Heading 2] Open Questions & Blockers
+[Synced block, no heading] 🗓️ Deadlines (and any sibling tracker blocks)
+  Hand-maintained synced block (often shared across pages). The skill
+  MUST preserve the existing <synced_block> tag intact — never rewrite
+  its contents. If the user explicitly asks to add a deadline, append
+  to the source page, not via this skill.
+
+[Heading 2] ✅ To Do's
+  Inline database (already on the page in this workspace). New owned
+  tasks the skill harvests get written here as DB rows — NOT as
+  markdown to-do bullets. Set:
+    - Name: the task (action verb first)
+    - Theme: matching the initiative (e.g., "Premium Package")
+    - Status: "Inbox" by default
+    - Due Date: if explicitly stated in source
+    - Priority: only if confidently inferrable, else leave blank
+    - Zuweisen / Stakeholder: skip unless you have the user's Notion ID
+  If the initiative page has no inline To Do's database, fall back to
+  a markdown to-do list under this heading and flag to the user.
+
+[Heading 2] ❓ Open Questions & Blockers
   To-do blocks (so they're checkable in Notion). Each entry:
   ☐ <question or blocker> — raised YYYY-MM-DD — [source link]
 
   When resolved: check the box AND move the resolution to Key Decisions
-  if it represents a real decision. Archive checked items into the
+  if it represents a real decision. Archive checked items into a
   "Resolved" toggle after 2 weeks.
 
-[Heading 2] Insights & Learnings
+[Heading 2] 🌱 Key Decisions
+  Bulleted list. Each entry:
+  • YYYY-MM-DD — <decision> — <one-line rationale> — [source link]
+
+[Heading 2] 💡 Insights & Learnings
   Bulleted list. Each entry:
   • YYYY-MM-DD — <what was learned/validated/invalidated> — [source link]
 
-[Heading 2] Action Items
-  To-do blocks. Each entry:
-  ☐ <task> — owner: <name> — due: <date if known> — [source link]
-
-  Mark done in Notion as items complete. Archive done items into the
-  "Completed" toggle after 2 weeks.
-
-[Toggle, collapsed] Update Log
+[Heading 2, toggle] 📓 Update Log
+  Use a toggle heading: ## 📓 Update Log {toggle="true"}
   • YYYY-MM-DD — <source> — <one-line summary of what was added>
 ```
 
-### Section size budgets (not file size)
+### Section size budgets
 
 - Open Questions: max ~10 active. If more, the initiative is too broad — flag to the user.
-- Action Items: max ~15 active. Older items get archived into the toggle.
 - Update Log: keep all entries; the toggle keeps it out of sight.
+- (Task volume is now governed by the To Do's DB filters/views, not by this skill.)
 
 ---
 
@@ -135,10 +152,10 @@ The page is an accumulating, self-maintaining document. Every run should make it
 
 After writing, tell the user:
 - Which Notion page was updated (with link) — or created
-- What was added (e.g., "2 decisions from the Notion meeting, 3 open questions from Slack, 4 action items")
+- What was added: counts split by destination (e.g., "2 decisions, 3 open questions, 4 to-do rows added to the inline DB, 1 update-log entry")
 - What was **intentionally dropped as noise** (1-line examples — sanity check on the distillation)
 - Anything you couldn't extract clearly or had to skip
-- Any stale-looking action items or open questions that might need user review
+- Any stale-looking to-do rows or open questions that might need user review
 
 ---
 

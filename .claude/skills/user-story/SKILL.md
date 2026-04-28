@@ -105,6 +105,28 @@ So that [benefit].
 [2–5 testable ACs — see rules below]
 ```
 
+### Problem statement quality bar
+
+The **Problem** section is the most-misused part of a ticket. The default failure mode is to write a *task description* ("this ticket exists to…") or a *solution description* ("add field X that does Y") — neither of which tells anyone *who hurts and why*.
+
+A strong problem statement:
+
+- ✅ Names the persona and their observable pain
+- ✅ Describes the business consequence of *not* solving it (revenue, retention, compliance, NPS, ops cost)
+- ✅ Reads as a fact about the world, not a description of the ticket
+
+A weak problem statement does any of these:
+
+- ❌ Names a specific value, threshold, field name, or endpoint — those belong in AC
+- ❌ Recounts decision history ("finalised on date X, superseding Y")
+- ❌ Frames the ticket as "this ticket exists to verify / lock in / configure…"
+- ❌ Describes the solution (the *what*) instead of the pain (the *why*)
+- ❌ Is written from a dev/internal perspective ("move job X to pipeline Y") with no user or business value visible
+
+**Self-reflection before submitting**: re-read the Problem section in isolation. If a developer read *only* this section, would they understand who is in pain and why it matters — without learning anything about the implementation? If not, rewrite.
+
+For paired before/after examples, see [references/problem_statement_examples.md](references/problem_statement_examples.md).
+
 ## Step 4 — Acceptance Criteria rules
 
 Use the Given/When/Then format with a short title per AC:
