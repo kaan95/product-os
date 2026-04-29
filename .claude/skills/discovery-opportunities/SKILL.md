@@ -1,23 +1,37 @@
 ---
 name: discovery-opportunities
-description: Weekly opportunity discovery coach for Legalhero PMs. Use this skill whenever you want to run a weekly opportunity discovery session, process user interview notes into structured opportunities, extract problems from customer feedback or complaints, update the Opportunity Solution Tree (OST), or review and prioritize the problem backlog. Trigger phrases: "run discovery", "weekly discovery", "I just did an interview", "help me extract opportunities", "update the OST", "what problems should we focus on", "process this feedback", "discovery session", "analyse this interview", "what did we learn this week". Also trigger immediately when the user pastes raw interview notes, complaint data, support ticket summaries, analytics observations, or internal feedback — and wants to turn those inputs into structured product opportunities. This skill only covers the opportunity/problem space. Solution exploration is out of scope here. Always activate this skill for any discovery-related work — catching new opportunities early and keeping the OST current is the foundation of everything else the PM team does.
+description: Weekly opportunity discovery coach. Use to run a discovery session, process interview notes into structured opportunities, extract problems from feedback, or update the Opportunity Solution Tree in Jira Polaris. Trigger phrases: "run discovery", "weekly discovery", "I just did an interview", "help me extract opportunities", "update the OST", "process this feedback", "discovery session", "analyse this interview". Also trigger when the user pastes raw interview notes, complaint data, support tickets, analytics observations, or internal feedback and wants to turn those into structured opportunities. Problem space only — solution exploration is out of scope.
 ---
 
 # Discovery: Opportunity Space
 
-This skill runs your weekly opportunity discovery session — the first and most critical half of the discovery cycle. The goal is a systematic, habit-based process for surfacing, scoring, and organising customer problems into your Opportunity Solution Tree.
+This skill runs your weekly opportunity discovery session. The goal is a systematic, habit-based process for surfacing, scoring, and organising customer problems into your Opportunity Solution Tree — tracked in Jira Polaris (project: PD).
 
-**Important scope boundary**: This skill covers the *problem space* only — identifying and structuring opportunities. Solution brainstorming and assumption testing are a separate step (see `discovery-solutions`, when available).
+**Scope boundary**: This skill covers the *problem space* only — identifying and structuring opportunities. Solution brainstorming and assumption testing are a separate step.
+
+---
+
+## Jira issue type guide
+
+The PD project uses these issue types. Only create the types listed here during a discovery session:
+
+| Type | When to use |
+|---|---|
+| **Opportunity** | A customer problem, pain point, or unmet need — the core output of this skill |
+| **Idea** | A specific solution concept a user proposed (capture it, but note it's out of scope for deeper work here) |
+| **Feature** | Committed, scoped work — *not* created by this skill |
+| **Improvement** | Operational or quality enhancement — *not* created by this skill |
+| **Initiative** | Strategic theme grouping multiple items — *not* created by this skill |
 
 ---
 
 ## What you need to bring
 
 Inputs can include any combination of:
-- **Interview notes or transcripts** — from partner lawyer sessions, client calls, RSV stakeholder meetings
+- **Interview notes or transcripts** — from user sessions, partner calls, stakeholder meetings
 - **Internal feedback** — operations team observations, support tickets, verbal reports
-- **Analytics signals** — PostHog usage patterns, drop-off points, feature adoption data
-- **Complaint data** — "Keine Rückmeldung" reports, case delays, NPS responses
+- **Analytics signals** — usage patterns, drop-off points, feature adoption data
+- **Complaint data** — reports, case delays, NPS responses
 - **Your own observations** — friction points you noticed in the product this week
 
 You don't need all of these every week. One solid interview and a handful of observations is enough to run a meaningful session.
@@ -28,12 +42,12 @@ You don't need all of these every week. One solid interview and a handful of obs
 
 ### Step 1: Orient to the current context
 
-Before extracting anything, read the current state:
+Before extracting anything, load the current state from Jira:
 
-1. Check the quarterly outcomes at `/Product Management OS/.claude/product/outcomes/` to understand what business objectives are in focus this quarter. Discovery should serve those outcomes — not float freely.
-2. Scan existing opportunity files in `/Product Management OS/.claude/product/discovery/opportunities/` to understand what's already captured. This prevents duplication and helps you spot where new inputs reinforce or challenge existing opportunities.
+1. Query existing opportunities: `project = PD AND issuetype = Opportunity ORDER BY created DESC` — scan the results to understand what's already captured. This prevents duplication and helps you spot where new inputs reinforce or challenge existing opportunities.
+2. Ask the user what the current quarter's key outcomes or focus areas are, if they haven't stated them. Discovery should serve those outcomes — not float freely. Do not attempt to read outcomes from local files.
 
-If those files don't exist yet, start fresh and note it.
+If the PD project returns no opportunities yet, note it and start fresh.
 
 ### Step 2: Intake the inputs
 
@@ -43,7 +57,7 @@ Ask the user what they're bringing to this session. Typical entry points:
 
 **B. Weekly review with mixed inputs** — the user has several signals from the week (interview + complaints + analytics). Process each source separately, then consolidate.
 
-**C. Quick add** — a single piece of feedback or observation that should be captured before it's forgotten. Create a minimal opportunity entry and cross-reference it with the existing OST.
+**C. Quick add** — a single piece of feedback or observation that should be captured before it's forgotten. Create a minimal Opportunity in Jira and cross-reference it with the existing board.
 
 If the user hasn't provided inputs yet, ask: *"What did you learn this week? Walk me through it — I'll handle the structuring."*
 
@@ -79,7 +93,7 @@ Organise the raw opportunities into a parent-child hierarchy:
 - **Parent opportunity** — a broad, high-level problem cluster
 - **Child opportunity** — a specific, observable instance of the parent
 
-The OST is not a flat list. It's a tree where the top nodes represent strategic problem areas, and the children represent specific, testable sub-problems. Good trees have 2-5 children per parent.
+The OST is not a flat list. Good trees have 2–5 children per parent.
 
 **Hierarchy test**: Can you say "X happens *because of* Y"? If yes, Y is the parent and X is the child.
 
@@ -113,52 +127,63 @@ Be honest. Don't inflate scores to justify working on something you like.
 
 ### Step 6: Cross-reference with existing opportunities
 
-Before finalising, compare new opportunities against existing ones:
-- **Reinforcement** — new evidence strengthens an existing opportunity → update the existing file with new evidence, don't create a duplicate
-- **New child** — the new opportunity is a specific instance of an existing parent → add it as a child
-- **New parent** — a recurring theme across multiple sources → create a new parent opportunity
-- **Contradiction** — new evidence challenges an existing opportunity → flag the tension and note what needs further validation
+Before creating any new Jira issue, query the PD board for potential overlaps. For each new opportunity statement:
 
-Note every cross-reference explicitly in the output file.
+- **Reinforcement** — a matching existing Opportunity already exists → update its Jira description with the new evidence quote; do not create a duplicate
+- **New child** — the new opportunity is a specific instance of an existing parent → create it as a new Opportunity and note the relationship in both descriptions
+- **New parent** — a recurring theme across multiple sources → create a new parent Opportunity
+- **Contradiction** — new evidence challenges an existing opportunity → flag the tension in the existing issue's description and note what needs further validation
+
+State every cross-reference decision explicitly before writing to Jira.
 
 ### Step 7: Connect to quarterly outcomes
 
-For each high-priority opportunity (score ≥ 18), note which quarterly outcome it connects to. If an opportunity doesn't connect to any current outcome, flag it — it may be important, but it isn't discovery that serves the current focus.
+For each high-priority opportunity (score ≥ 18), state which current quarter outcome or strategic theme it connects to. Use the outcomes the user provided in Step 1. If an opportunity doesn't connect to any current outcome, flag it — it may be important, but it isn't discovery that serves the current focus.
 
-Reference Legalhero's five strategic pillars when stating strategic relevance:
-1. **Intelligent Matching** — right lawyer, right case
-2. **Mandate Distribution** — balanced workload, predictable case flow
-3. **Digital Case Orchestration** — standardised workflows across the lifecycle
-4. **Process Standardisation** — measurable, SLA-driven quality
-5. **Data-Driven Infrastructure** — transparency, measurability, scalability
+Do not hardcode strategic pillars in this skill. Ask the user if they haven't provided them.
 
-### Step 8: Write the output file
+### Step 8: Write to Jira Polaris
 
-For each new source of opportunities (one interview, one feedback batch, one analytics observation), create a new file:
+For each new or updated opportunity, write to the PD project:
 
-**File path:** `/Product Management OS/.claude/product/discovery/opportunities/`
-**Filename format:** `{source-type}-{topic}-{YYYY-MM-DD}.md`
+**Creating a new Opportunity:**
+- Use `issuetype = Opportunity`
+- **Title**: the opportunity statement (`[User type] [pain verb] [specific situation]`)
+- **Description**: structured as below
 
-Examples:
-- `interview-livshic-2026-04-10.md`
-- `internal-feedback-intake-quality-2026-04-10.md`
-- `analytics-document-editor-dropoff-2026-04-10.md`
+```
+## Evidence
+- [Source type, date]: "[verbatim quote or observation]"
+- [Source type, date]: "[verbatim quote or observation]"
 
-Read the template at `references/opportunity-template.md` and follow it exactly.
+## Score
+Pain: [1–3] | Reach: [1–3] | Frequency: [1–3] → Total: [score]/27 ([Low/Medium/High] priority)
 
-For existing opportunity files that receive new evidence, edit the file directly — add evidence quotes to the relevant child opportunity and update the "Gaps & Uncertainties" section.
+## Outcome connection
+[Which quarterly outcome this connects to, or "Not connected to current quarter — flagged"]
+
+## Gaps & open questions
+- [What would need to be true to raise the score?]
+- [What would further validation look like?]
+```
+
+**Updating an existing Opportunity:**
+Append new evidence to the Evidence section and update the score if the new data changes it. Do not overwrite existing evidence.
+
+**Capturing a user-proposed solution:**
+If a user suggested a specific solution during the session, create an `Idea` issue (not an Opportunity). Title it as the proposed solution and link it to the relevant Opportunity in the description.
 
 ### Step 9: Deliver a discovery summary
 
-After saving the file(s), give the user a crisp summary:
+After writing to Jira, give the user a crisp summary:
 
 ```
 ## Weekly Discovery Summary — [Date]
 
-**New opportunities identified**: N (X high priority, Y medium, Z low)
+**New opportunities created**: N (X high priority, Y medium, Z low)
 **Existing opportunities reinforced**: N
 **Top opportunities this week**:
-  1. [Title] — Score: [N] — [One-line description]
+  1. [PD-XXX] [Title] — Score: [N] — [One-line description]
   2. ...
 
 **Key themes emerging**:
@@ -176,7 +201,7 @@ After saving the file(s), give the user a crisp summary:
 
 ## Quality checks
 
-Before saving any opportunity file, verify:
+Before writing to Jira, verify:
 - Every opportunity is a *problem*, not a solution — "lawyers can't see deadlines while editing" not "add a sidebar panel"
 - Every score has evidence backing it — not vibes
 - Parent opportunities are genuinely distinct problem clusters, not just groupings of convenience
@@ -189,34 +214,16 @@ Before saving any opportunity file, verify:
 ## Handling common situations
 
 **"The user just wants to paste notes and have you do everything"**
-Do it. Read the notes, extract opportunities, score them, build the tree, write the file. Ask only if something is genuinely unclear. Don't turn a 15-minute processing task into a 15-question interview.
+Do it. Read the notes, extract opportunities, score them, build the tree, write to Jira. Ask only if something is genuinely unclear. Don't turn a 15-minute processing task into a 15-question interview.
 
 **"The user only talked to one person"**
-That's fine — one interview is enough for a weekly session. Note the single-source limitation in the "Source Notes" section and flag what needs validation from additional perspectives.
+That's fine — one interview is enough for a weekly session. Note the single-source limitation in the Jira description's "Gaps & open questions" section and flag what needs validation from additional perspectives.
 
 **"The input is in German"**
-Process it as-is. Opportunity titles and descriptions should be in English for consistency (this is how existing files are structured), but German quotes can be included verbatim as supporting evidence.
+Process it as-is. Opportunity titles and Jira issue summaries should be in English for consistency, but German quotes can be included verbatim as supporting evidence.
 
 **"Nothing interesting happened this week"**
 Help the user look harder. Check: Did they review any analytics? Were there any support tickets? Did they use the product themselves? A week without discovery inputs usually means discovery wasn't prioritised — surface that gently and help schedule next week.
 
 **"A user suggested a specific solution"**
-Note it in the opportunity file under the relevant child (as "Proposed solution from user") but don't let it become the opportunity itself. The opportunity is the problem. The solution suggestion is evidence of the problem's salience.
-
----
-
-## File organisation reference
-
-```
-.claude/product/discovery/
-├── opportunities/          ← Opportunity files live here
-│   ├── interview-{topic}-{date}.md
-│   ├── internal-feedback-{topic}-{date}.md
-│   └── analytics-{topic}-{date}.md
-├── assumptions/            ← Out of scope for this skill
-└── solutions/              ← Out of scope for this skill
-```
-
----
-
-See `references/opportunity-template.md` for the exact output file structure.
+Capture it as an `Idea` issue in Jira linked to the relevant Opportunity. Don't let it become the opportunity itself — the opportunity is the problem.
