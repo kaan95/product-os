@@ -182,6 +182,30 @@ If yes:
 - Link as a blocker of the FE ticket ("FE ticket blocked by Design").
 - Inform the user that a Design ticket was created.
 
-## Step 7 — Link related context
+## Step 7 — Link to a PD (Polaris) Feature
+
+**Skip this step entirely for Bugs.** Only run for Story and Design tickets.
+
+The PD project (`LH Product Discovery`) is the discovery board where Features track what's being shipped. Every delivery ticket (Story / Design) should be linked to the PD Feature it implements, so the Polaris view stays in sync with delivery.
+
+1. **Search PD for candidate Features** matching the new ticket's topic:
+   ```
+   project = PD AND issuetype = Feature AND (text ~ "<keyword1>" OR text ~ "<keyword2>")
+   ```
+   Pick 2–3 strong keywords from the ticket's summary or problem statement (use both English and the German equivalents the user is likely to have written in PD).
+
+2. **If 0 candidates**: tell the user no matching PD Feature was found and ask whether they want to (a) create a new PD Feature, (b) link to a parent Initiative instead, or (c) skip linking. Do not invent a link.
+
+3. **If 1+ candidates**: list them (key, summary, status) and ask the user which one to link, or whether to skip. Don't auto-link without confirmation — keyword matches are noisy.
+
+4. **Create the link** as a `Polaris work item link` with the delivery ticket as `inwardIssue` and the PD Feature as `outwardIssue` (this matches the existing convention: PD Feature "is implemented by" the delivery ticket).
+
+   ```
+   createIssueLink(type="Polaris work item link", inwardIssue=<new ticket>, outwardIssue=<PD-XXX>)
+   ```
+
+5. If a BE/FE pair was created, link **both** to the same PD Feature.
+
+## Step 8 — Link related context
 
 If the user references a parent initiative, the original feature ticket that introduced the bug, or a related ticket, link it with `createIssueLink` using an appropriate link type ("Relates to" for context, "Blocks" for hard dependencies).
